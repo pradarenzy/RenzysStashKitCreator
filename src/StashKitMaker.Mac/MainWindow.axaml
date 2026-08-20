@@ -1,0 +1,73 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="StashKitMaker.Mac.MainWindow"
+        Title="Renzy's Stash Kit Maker"
+        Width="1120" Height="760" MinWidth="860" MinHeight="600">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+      <StackPanel Spacing="3">
+        <TextBlock Text="Renzy's Stash Kit Maker" FontSize="25" FontWeight="SemiBold" />
+        <TextBlock Text="Local-only FL Studio sample recovery and safe kit creation for macOS." Opacity="0.72" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <Button Content="Add FLPs…" Click="AddFiles_Click" />
+        <Button Content="Add folder…" Click="AddFolder_Click" />
+        <Button Content="Add sample root…" Click="AddSampleRoot_Click" />
+      </StackPanel>
+    </Grid>
+    <TabControl Grid.Row="1">
+      <TabItem Header="Projects &amp; analysis">
+        <Grid Margin="0,16,0,0" RowDefinitions="Auto,*,Auto" RowSpacing="10">
+          <TextBlock Text="Add FL Studio projects, then analyze their referenced samples without altering the FLP files." TextWrapping="Wrap" Opacity="0.72" />
+          <DataGrid x:Name="ProjectsGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Extended">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Project" Binding="{Binding Name}" Width="2*" />
+              <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
+              <DataGridTextColumn Header="Samples" Binding="{Binding Samples}" Width="90" />
+              <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="3*" />
+            </DataGrid.Columns>
+          </DataGrid>
+          <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+            <Button Content="Remove selected" Click="RemoveSelected_Click" />
+            <Button Content="Clear" Click="ClearProjects_Click" />
+            <Button Content="Analyze projects" Click="Analyze_Click" IsDefault="True" />
+          </StackPanel>
+        </Grid>
+      </TabItem>
+      <TabItem Header="Build kit">
+        <Grid Margin="0,16,0,0" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
+          <TextBlock Text="Review the deduplicated, hash-verified build plan. Building copies bytes only after explicit confirmation." TextWrapping="Wrap" Opacity="0.72" />
+          <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <TextBox x:Name="DestinationText" Watermark="Destination parent folder" />
+            <Button Grid.Column="1" Content="Choose…" Click="ChooseDestination_Click" />
+            <TextBox x:Name="KitNameText" Grid.Column="2" Width="190" Watermark="Kit name" />
+          </Grid>
+          <DataGrid x:Name="PlanGrid" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Output" Binding="{Binding Output}" Width="2*" />
+              <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="*" />
+              <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="3*" />
+              <DataGridTextColumn Header="Evidence" Binding="{Binding Evidence}" Width="2*" />
+            </DataGrid.Columns>
+          </DataGrid>
+          <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
+            <CheckBox x:Name="ProvenanceCheck" Content="Include private source/project provenance in manifest" />
+            <CheckBox x:Name="MergeCheck" Content="Merge into an existing generated kit" />
+            <Button Content="Build approved kit" Click="Build_Click" />
+          </StackPanel>
+        </Grid>
+      </TabItem>
+      <TabItem Header="About this macOS build">
+        <StackPanel Margin="0,16,0,0" Spacing="10">
+          <TextBlock Text="Included now" FontWeight="SemiBold" FontSize="18" />
+          <TextBlock Text="FLP selection and folder discovery, sample-path recovery, SHA-256 deduplication, explainable classification, deterministic naming, safe kit creation, manifests, and Finder reveal." TextWrapping="Wrap" />
+          <TextBlock Text="Next compatibility work" FontWeight="SemiBold" FontSize="18" Margin="0,12,0,0" />
+          <TextBlock Text="Sampler audio preview, MIDI Stack playback/export, Unknown-file review, and FL Browser metadata editing need macOS-native audio and UI adapters. The underlying parser, MIDI writer, metadata, and safe build logic are already shared." TextWrapping="Wrap" />
+        </StackPanel>
+      </TabItem>
+    </TabControl>
+    <Border Grid.Row="2" Margin="0,16,0,0" Padding="10" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="6">
+      <TextBlock x:Name="StatusText" Text="Ready · Offline · No telemetry" TextWrapping="Wrap" />
+    </Border>
+  </Grid>
+</Window>

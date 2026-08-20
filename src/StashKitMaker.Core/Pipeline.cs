@@ -9,7 +9,9 @@ public sealed class PathResolver
     public PathResolver(IEnumerable<string> roots) => this.roots = roots.Where(Directory.Exists).Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     public Resolution Resolve(string stored, string projectPath)
     {
-        var expanded = Environment.ExpandEnvironmentVariables(stored.Trim().Trim('"')).Replace('/', Path.DirectorySeparatorChar);
+        // FLPs often retain Windows paths even when opened on macOS. Treat either
+        // slash as a separator before trying project-relative or basename recovery.
+        var expanded = Environment.ExpandEnvironmentVariables(stored.Trim().Trim('"')).Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
         var direct = new List<string>();
         if (Path.IsPathRooted(expanded)) direct.Add(expanded);
         direct.Add(Path.Combine(Path.GetDirectoryName(projectPath)!, expanded));
