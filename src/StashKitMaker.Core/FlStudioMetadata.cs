@@ -467,7 +467,9 @@ public static class FlStudioKitMetadata
     }
 
     private static int NumericLeaf(string path) => int.TryParse(Path.GetFileNameWithoutExtension(path), NumberStyles.None, CultureInfo.InvariantCulture, out var value) ? value : -1;
-    private static string NormalizeRelative(string path) => path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).Trim(Path.DirectorySeparatorChar);
+    // Manifests may be produced on either Windows or macOS. Normalizing to '/'
+    // keeps folder moves safe when a kit crosses platforms.
+    private static string NormalizeRelative(string path) => path.Replace('\\', '/').Trim('/');
     private static bool PathEquals(string first, string second) => string.Equals(NormalizeRelative(first), NormalizeRelative(second), StringComparison.OrdinalIgnoreCase);
 
     private static void UpdateManifest(string manifestPath, IReadOnlyList<CalculatedKitFolder> folders)
@@ -480,15 +482,22 @@ public static class FlStudioKitMetadata
             if (node is not JsonObject entry || entry["RelativePath"]?.GetValue<string>() is not { } relative) continue;
             var mapping = mappings.FirstOrDefault(folder => IsWithin(relative, folder.OldRelativePath));
             if (mapping is null) continue;
-            var remainder = Path.GetRelativePath(mapping.OldRelativePath, relative);
-            entry["RelativePath"] = Path.Combine(mapping.NewRelativePath, remainder);
+            var normalizedRelative = NormalizeRelative(relative);
+            var oldPath = NormalizeRelative(mapping.OldRelativePath);
+            var remainder = normalizedRelative.Length == oldPath.Length ? "" : normalizedRelative[(oldPath.Length + 1)..];
+            entry["RelativePath"] = string.IsNullOrEmpty(remainder) ? NormalizeRelative(mapping.NewRelativePath) : NormalizeRelative(mapping.NewRelativePath) + "/" + remainder;
         }
         var temp = manifestPath + ".tmp";
         File.WriteAllText(temp, array.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
         File.Move(temp, manifestPath, true);
     }
 
-    private static bool IsWithin(string path, string folder) => path.Equals(folder, StringComparison.OrdinalIgnoreCase) || path.StartsWith(folder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+    private static bool IsWithin(string path, string folder)
+    {
+        var normalizedPath = NormalizeRelative(path);
+        var normalizedFolder = NormalizeRelative(folder);
+        return normalizedPath.Equals(normalizedFolder, StringComparison.OrdinalIgnoreCase) || normalizedPath.StartsWith(normalizedFolder + "/", StringComparison.OrdinalIgnoreCase);
+    }
     private static int OldDepth(string relativePath) => string.IsNullOrWhiteSpace(relativePath) ? 0 : relativePath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries).Length;
     private static string SafeChildPath(string root, string relative)
     {

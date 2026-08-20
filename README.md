@@ -45,6 +45,21 @@ dotnet publish src/StashKitMaker.App -c Release -r win-x64 --self-contained true
 
 Run `outputs/RenzysStashKitMaker/RenzysStashKitMaker.exe`. The self-contained package does not require a separate .NET Desktop Runtime install.
 
+### macOS prototype
+
+The `codex/macos` branch adds `StashKitMaker.Mac.sln`, a native macOS desktop shell built with Avalonia. It shares the parser and safe kit-building core with the Windows app while using macOS file pickers and Finder reveal.
+
+Requires the .NET 10 SDK on macOS. Apple Silicon and Intel are both supported by the .NET runtime; publish with the appropriate runtime identifier.
+
+```sh
+dotnet build StashKitMaker.Mac.sln -c Release
+dotnet run --project src/StashKitMaker.Mac -c Release
+dotnet run --project tests/StashKitMaker.Tests -c Release
+dotnet publish src/StashKitMaker.Mac -c Release -r osx-arm64 --self-contained true -o outputs/RenzysStashKitMaker-macos-arm64
+```
+
+The current macOS shell supports FLP selection/folder discovery, cross-platform stored-path recovery, sample-root search, SHA-256 deduplication, classification, deterministic names, explicit safe builds, manifests, and Finder reveal. Sampler audio playback, MIDI Stack playback/export, Unknown-file review, and the FL Browser metadata editor remain Windows-only until their macOS-native adapters are implemented.
+
 ## Privacy and limits
 
 There is no network code, telemetry, cloud classifier, destructive source operation, arbitrary overwrite, or audio re-encoding. Exported provenance is controlled by `IncludePrivateProvenance`; operational history and processed hashes are stored separately under the user's local application-data directory. Kit deletion is explicit, marker-gated, and recoverable through the Windows Recycle Bin. Advanced audio classification, a broad real-FLP compatibility corpus, SQLite-scale indexing, and an installer are not yet complete.
