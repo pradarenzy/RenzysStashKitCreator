@@ -60,8 +60,44 @@ dotnet publish src/StashKitMaker.Mac -c Release -r osx-arm64 --self-contained tr
 
 The current macOS shell supports FLP selection/folder discovery, cross-platform stored-path recovery, sample-root search, SHA-256 deduplication, classification, deterministic names, explicit safe builds, manifests, and Finder reveal. Sampler audio playback, MIDI Stack playback/export, Unknown-file review, and the FL Browser metadata editor remain Windows-only until their macOS-native adapters are implemented.
 
+### macOS installer
+
+`packaging/macos/build-pkg.sh` produces a signed-or-ad-hoc `.pkg` that installs
+`Renzy's Stash Kit Maker.app` into `/Applications`. It publishes self-contained, so the
+end user does not install a .NET runtime.
+
+```sh
+packaging/macos/build-pkg.sh                      # Apple silicon, version from the latest git tag
+packaging/macos/build-pkg.sh --arch universal     # arm64 + x86_64, lipo'd into one bundle
+packaging/macos/build-pkg.sh --arch x64 --version 0.9.8
+```
+
+The script publishes the RID(s), assembles the bundle from `packaging/macos/Info.plist`
+and `AppIcon.icns`, ad-hoc signs every Mach-O (required for arm64 to load at all, and
+mandatory after `lipo` strips existing signatures), then runs `pkgbuild` + `productbuild`.
+Output lands in `outputs/RenzysStashKitMaker-<version>-macos-<arch>.pkg`.
+
+`hostArchitectures` in `packaging/macos/distribution.xml` is set from `--arch`, so an
+arm64-only installer refuses to run on Intel with a clear message instead of installing a
+bundle that cannot launch. `<allowed-os-versions min="13.0"/>` matches the .NET 10 floor.
+
+Builds are **not notarized**. Gatekeeper will flag an unsigned `.pkg` on first open; the
+user right-clicks it and chooses **Open**, or allows it under **System Settings › Privacy &
+Security**. The package's `postinstall` clears `com.apple.quarantine` from the installed
+app so the app itself launches normally afterwards. To ship a notarized build, export a
+Developer ID pair and re-run:
+
+```sh
+SIGN_APP="Developer ID Application: NAME (TEAMID)" \
+SIGN_PKG="Developer ID Installer: NAME (TEAMID)" \
+packaging/macos/build-pkg.sh --arch universal
+xcrun notarytool submit outputs/*.pkg --keychain-profile AC_PASSWORD --wait
+xcrun stapler staple outputs/*.pkg
+```
+
 ## Privacy and limits
 
-There is no network code, telemetry, cloud classifier, destructive source operation, arbitrary overwrite, or audio re-encoding. Exported provenance is controlled by `IncludePrivateProvenance`; operational history and processed hashes are stored separately under the user's local application-data directory. Kit deletion is explicit, marker-gated, and recoverable through the Windows Recycle Bin. Advanced audio classification, a broad real-FLP compatibility corpus, SQLite-scale indexing, and an installer are not yet complete.
+There is no network code, telemetry, cloud classifier, destructive source operation, arbitrary overwrite, or audio re-encoding. Exported provenance is controlled by `IncludePrivateProvenance`; operational history and processed hashes are stored separately under the user's local application-data directory. Kit deletion is explicit, marker-gated, and recoverable through the Windows Recycle Bin. Advanced audio classification, a broad real-FLP compatibility corpus, and SQLite-scale indexing are not yet complete. A macOS `.pkg` installer is built by
+`packaging/macos/build-pkg.sh`; a Windows installer is not.
 
 Research references: [Image-Line FLP documentation](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/fformats_open_flp.htm), [PyFLP](https://pyflp.readthedocs.io/en/latest/), and [flpdiff format research](https://github.com/dawhubapp/flpdiff/blob/main/docs/fl-format/flp-format-spec.md).
