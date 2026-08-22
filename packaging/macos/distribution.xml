@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>Renzy&#8217;s Stash Kit Maker</title>
+    <organization>com.pradarenzy</organization>
+    <options customize="never" require-scripts="false" rootVolumeOnly="true" hostArchitectures="__HOST_ARCHS__"/>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <license file="license.txt" mime-type="text/plain"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+    <volume-check>
+        <allowed-os-versions>
+            <os-version min="13.0"/>
+        </allowed-os-versions>
+    </volume-check>
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+    <choices-outline>
+        <line choice="default">
+            <line choice="__PKG_ID__"/>
+        </line>
+    </choices-outline>
+    <choice id="default"/>
+    <choice id="__PKG_ID__" visible="false">
+        <pkg-ref id="__PKG_ID__"/>
+    </choice>
+    <pkg-ref id="__PKG_ID__" version="__VERSION__" onConclusion="none">#component.pkg</pkg-ref>
+</installer-gui-script>
